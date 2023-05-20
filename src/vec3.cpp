@@ -1,7 +1,7 @@
 #include "vec3.h"
-
 #include <cmath>
 #include <iostream>
+#include "utils.h"
 
 using std::sqrt;
 using std::pow;
@@ -38,6 +38,9 @@ double vec3::length() const {
             return sqrt(length_squared());
         }
 
-inline std::ostream& operator<<(std::ostream &out, const vec3 &v) {
-    return out << v.e[0] << ' ' << v.e[1] << ' ' << v.e[2];
-}
+bool vec3::near_zero() const {
+        // Return true if the vector is close to zero in all dimensions.
+        const auto s = 1e-8;
+        return (fabs(e[0]) < s) && (fabs(e[1]) < s) && (fabs(e[2]) < s);
+    }
+

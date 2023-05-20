@@ -6,6 +6,8 @@
 
 class vec3 {
     public:
+        double e[3];
+
         vec3();
         vec3(double e0, double e1, double e2);
 
@@ -21,8 +23,8 @@ class vec3 {
         vec3 &operator/=(const double t);
         double length() const;
         double length_squared() const;
-    public:
-        double e[3];
+        bool near_zero() const;
+        //static vec3 random();
 };
 
 // Type aliases for vec3

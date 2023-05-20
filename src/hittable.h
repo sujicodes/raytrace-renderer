@@ -2,11 +2,14 @@
 #define HITTABLE_H
 #include "ray.h"
 
+class material;
+
 struct hit_record { 
     point3 p;
     vec3 normal;
     double t; 
     bool is_outside;
+    shared_ptr<material> mat_ptr;
 
     inline void set_face_normal(const ray& r, const vec3& outward_normal) { 
         is_outside = dot(r.direction(), outward_normal) < 0;
