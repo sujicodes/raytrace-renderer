@@ -19,10 +19,7 @@ class ray {
         vec3 dir;
 };
 
-//struct ray{
-//    point3 origin;
-//    vec3 direction;
-//    point3 at(double t) const {return origin + t*direction;}
-//};
+
+
 
 #endif

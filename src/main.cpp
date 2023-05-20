@@ -12,7 +12,8 @@ using namespace std;
 hittable_list random_scene() {
     hittable_list world;
 
-    auto ground_material = make_shared<lambertian>(color(0.5, 0.5, 0.5));
+    auto ground_material = make_shared<material>(color(0.5, 0.5, 0.5));
+    ground_material->roughness=1;
     world.add(make_shared<sphere>(point3(0,-1000,0), 1000, ground_material));
 
     for (int a = -15; a < 15; a++) {
@@ -26,38 +27,44 @@ hittable_list random_scene() {
                 if (choose_mat < 0.65) {
                     // diffuse
                     auto albedo = color(random_double(), random_double(), random_double());
-                    sphere_material = make_shared<lambertian>(albedo);
+                    sphere_material = make_shared<material>(albedo);
+                    sphere_material->roughness=1;
                     world.add(make_shared<sphere>(center, 0.2, sphere_material));
                 } else if (choose_mat < 0.8) {
-                    sphere_material = make_shared<light>();
+                    sphere_material = make_shared<material>();
                     sphere_material->emmission_colour = color(random_double(), random_double(), random_double()) ;
                     sphere_material->emmission_strength = 4;
                     world.add(make_shared<sphere>(center, 0.2, sphere_material));
                 } else if (choose_mat < 0.95) {
                     // metal
                     auto albedo = color(random_double(), random_double(), random_double());
-                    auto fuzz = random_double();
-                    sphere_material = make_shared<metal>(albedo, fuzz);
+                    auto roughness = random_double();
+                    sphere_material = make_shared<material>(albedo);
+                    sphere_material->roughness = roughness;
                     world.add(make_shared<sphere>(center, 0.2, sphere_material));
                 } else {
                     // glass
-                    sphere_material = make_shared<dielectric>(1.5);
+                    sphere_material = make_shared<material>(color(1,1,1));
+                    sphere_material->is_dialetric = true;
                     world.add(make_shared<sphere>(center, 0.2, sphere_material));
                 }
             }
         }
     }
 
-    auto material1 = make_shared<dielectric>(1.5);
-    world.add(make_shared<sphere>(point3(0, 1, 0), 1.0, material1));
+    auto glass = make_shared<material>(color(1,1,1)); 
+    glass->is_dialetric=true;
+    world.add(make_shared<sphere>(point3(0, 1, 0), 1.0, glass));
 
-    auto material2 = make_shared<lambertian>(color(0.4, 0.2, 0.1));
-    world.add(make_shared<sphere>(point3(-4, 1, 0), 1.0, material2));
+    auto lambert = make_shared<material>(color(0.4, 0.2, 0.1));
+    lambert->roughness = 1;
+    world.add(make_shared<sphere>(point3(-4, 1, 0), 1.0, lambert));
 
-    auto material3 = make_shared<metal>(color(0.7, 0.6, 0.5), 0.0);
-    world.add(make_shared<sphere>(point3(4, 1, 0), 1.0, material3));
+    auto metal = make_shared<material>(color(0.7, 0.6, 0.5));
+    metal->roughness = 0;
+    world.add(make_shared<sphere>(point3(4, 1, 0), 1.0, metal));
 
-    auto light_source = make_shared<light>();
+    auto light_source = make_shared<material>(color(0,0,0));
     world.add(make_shared<sphere>(point3(0.0, 3.0, -6.0), 2.0, light_source));
     light_source->emmission_colour = color(1,1,1);
     light_source->emmission_strength = 5;
@@ -114,10 +121,18 @@ color ray_color(const ray& r, const hittable &world, int depth) {
         ray scattered;
         color attenuation;
         color emmitted_light = rec.mat_ptr->emmission_colour * rec.mat_ptr->emmission_strength;
-        if (rec.mat_ptr->scatter(r, rec, attenuation, scattered)){
-            return (emmitted_light + attenuation * ray_color(scattered, world, depth-1));
+        vec3 ray_dir;
+        if (!rec.mat_ptr->is_dialetric){
+            vec3 diff_ray_dir = diffuse_ray_direction(r, rec);
+            vec3 spec_ray_dir = specular_ray_direction(r, rec);
+            ray_dir = lerp(spec_ray_dir, diff_ray_dir, rec.mat_ptr->roughness);
         }
-        return emmitted_light;
+        else{
+            ray_dir = dialetric_ray_direction(r, rec, 1.5);
+        }
+        scattered = ray(rec.p, ray_dir);
+        return (emmitted_light +  rec.mat_ptr->albedo * ray_color(scattered, world, depth-1));
+        //return emmitted_light;
     };
 
     vec3 unit_direction = unit_vector(r.direction());
@@ -131,7 +146,7 @@ int main() {
     const auto aspect_ratio = 16.0 / 9.0;
     const int image_width = 400;
     const int image_height = static_cast<int>(image_width / aspect_ratio);
-    const int samples_per_pixel = 500;
+    const int samples_per_pixel = 5;
     const int max_depth = 50;
     
     // world
