@@ -12,7 +12,7 @@ class camera {
     vec3 u, v, w;
 
     public:
-        camera(
+         __device__ camera(
             point3 lookfrom,
             point3 lookat,
             vec3   vup,
@@ -36,8 +36,8 @@ class camera {
 
             lens_radius = aperture/2;
         }
-        ray get_ray(double s, double t) const {
-            vec3 rd = lens_radius * random_in_unit_disk();
+         __device__ ray get_ray(double s, double t, curandState *local_rand_state) const {
+            vec3 rd = lens_radius * random_in_unit_disk(local_rand_state);
             vec3 offset = u * rd.x() + v * rd.y();
 
             return ray(

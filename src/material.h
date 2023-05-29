@@ -11,23 +11,23 @@ struct material{
     size_t emmission_strength = 0;
     float specular_probability = 0;
     bool is_dialetric = false;
-    material(){}
-    material(const color& a): albedo(a) {}
+    __device__ material(){}
+    __device__ material(const color& a): albedo(a) {}
 };
 
-vec3 diffuse_ray_direction(const ray &r, const hit_record& rec){
-    vec3 scatter_direction = rec.normal + random_unit_vector();
+ __device__ vec3 diffuse_ray_direction(const ray &r, const hit_record& rec, curandState *local_rand_state){
+    vec3 scatter_direction = rec.normal + random_unit_vector(local_rand_state);
     // Catch degenerate scatter direction
     if (scatter_direction.near_zero())
         scatter_direction = rec.normal;
     return scatter_direction;
 }
 
-vec3 specular_ray_direction(const ray &r, const hit_record& rec){
+ __device__ vec3 specular_ray_direction(const ray &r, const hit_record& rec){
     return reflect(unit_vector(r.direction()), rec.normal);
 }
 
-vec3 dialetric_ray_direction(const ray &r, const hit_record& rec, const float &index_of_refraction){
+ __device__ vec3 dialetric_ray_direction(const ray &r, const hit_record& rec, const float &index_of_refraction, curandState *local_rand_state){
     double refraction_ratio = rec.is_outside ? (1.0/index_of_refraction) : index_of_refraction;
 
     vec3 unit_direction = unit_vector(r.direction());
@@ -37,7 +37,7 @@ vec3 dialetric_ray_direction(const ray &r, const hit_record& rec, const float &i
     vec3 direction;
     bool not_refractable = refraction_ratio * sin_theta > 1.0;
 
-    if (not_refractable || reflectance(cos_theta, refraction_ratio) > random_double())
+    if (not_refractable || reflectance(cos_theta, refraction_ratio) > curand_uniform(local_rand_state))
         direction = reflect(unit_direction, rec.normal);
     else
         direction = refract(unit_direction, rec.normal, refraction_ratio);

@@ -45,20 +45,20 @@ vec3 unit_vector(vec3 v) {
     return v / v.length();
 }
 
-vec3 random_in_unit_sphere() {
+vec3 random_in_unit_sphere(curandState *local_rand_state) {
     while (true) {
-        vec3 p = vec3(random_double(-1,1), (random_double(-1,1)), random_double(-1,1));
+        vec3 p = vec3(curand_uniform(&local_rand_state), curand_uniform(&local_rand_state), curand_uniform(&local_rand_state));
         if (p.length_squared() >= 1) continue;
         return p;
     }
 }
 
-vec3 random_unit_vector() {
-    return unit_vector(random_in_unit_sphere());
+vec3 random_unit_vector(curandState *local_rand_state) {
+    return unit_vector(random_in_unit_sphere(local_rand_state));
 }
 
-vec3 random_in_hemisphere(const vec3& normal) {
-    vec3 in_unit_sphere = random_in_unit_sphere();
+vec3 random_in_hemisphere(const vec3& normal, curandState *local_rand_state) {
+    vec3 in_unit_sphere = random_in_unit_sphere(local_rand_state);
     if (dot(in_unit_sphere, normal) > 0.0) // In the same hemisphere as the normal
         return in_unit_sphere;
     else
@@ -76,9 +76,9 @@ vec3 refract(const vec3& uv, const vec3& n, double etai_over_etat) {
     return r_out_perp + r_out_parallel;
 }
 
-vec3 random_in_unit_disk() {
+vec3 random_in_unit_disk(curandState *local_rand_state) {
     while (true) {
-        auto p = vec3(random_double(-1,1), random_double(-1,1), 0);
+        auto p = vec3(curand_uniform(local_rand_state), curand_uniform(local_rand_state), 0);
         if (p.length_squared() >= 1) continue;
         return p;
     }
