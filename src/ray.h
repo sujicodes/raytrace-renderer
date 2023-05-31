@@ -1,7 +1,7 @@
 #ifndef RAY_H
 #define RAY_H
 
-#include "vec3_utils.h"
+#include "vec3.h"
 class ray {
     public:
         __device__ ray() {}

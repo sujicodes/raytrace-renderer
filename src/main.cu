@@ -7,7 +7,6 @@
 #include "hittable_list.h"
 #include "camera.h"
 #include "material.h"
-#include "vec3.h"
 
 using namespace std;
 
@@ -243,7 +242,7 @@ int main() {
     int num_hitables = 30*30+2+3;
     hittable_list *d_world;
     checkCudaErrors(cudaMalloc((void **)&d_world, sizeof(hittable_list *)));
-    cudaMalloc((void**)(&d_world->objects), num_hitables * sizeof(shared_ptr<hittable>));
+    checkCudaErrors(cudaMalloc((void**)(&d_world->objects), num_hitables * sizeof(shared_ptr<hittable>)));
     
     camera **d_camera;
     checkCudaErrors(cudaMalloc((void **)&d_camera, sizeof(camera *)));
